@@ -12,26 +12,26 @@
 ; Link ..........:
 ; Example .......: No
 ; ===============================================================================================================================
+;Tries to zoom out of the screen until the borders, located at the top of the game (usually black), is located.
+;Only does it for 20 zoom outs, no more than that.
+
 Func ZoomOut() ;Zooms out
-	Local $i = 0
-	_CaptureRegion(0, 0, 860, 2)
-	If _GetPixelColor($aTopLeftClient[0], $aTopLeftClient[1]) <> Hex($aTopLeftClient[2], 6) And _GetPixelColor($aTopRightClient[0], $aTopRightClient[1]) <> Hex($aTopRightClient[2], 6) Then
-		If _Sleep(1500) Then Return
-		SetLog("Zooming Out", $COLOR_BLUE)
-		While _GetPixelColor($aTopLeftClient[0], $aTopLeftClient[1]) <> Hex($aTopLeftClient[2], 6) And _GetPixelColor($aTopRightClient[0], $aTopRightClient[1]) <> Hex($aTopRightClient[2], 6)
-			If $debugsetlog = 1 Then Setlog("Index = "&$i, $COLOR_PURPLE) ; Index=2X loop count if success, will be odd value or increment by 1 if controlsend fail
-			If _Sleep(200) Then Return
-			If ControlSend($Title, "", "", "{DOWN}") Then $i += 1
-			If $i > 20 Then
-				If _Sleep(1000) Then Return
-			EndIf
-			If $i > 80 Then Return
-			If IsProblemAffect(True) Then  ; added to catch errors during Zoomout
-				Setlog("BS Error window detected", $COLOR_RED)
-				If checkObstacles() = True Then Setlog("Error window cleared, continue Zoom out", $COLOR_BLUE)  ; call to clear normal errors
-			EndIf
-			$i += 1  ; add one to index value to prevent endless loop if controlsend fails
-			_CaptureRegion(0, 0, 860, 2)
-		WEnd
-	EndIf
-EndFunc   ;==>ZoomOut
+   Local $i = 0 ; Reset zoom out counter
+   _CaptureRegion(0, 0, 860, 2) ; Capture the top rows of BlueStacks
+   If _GetPixelColor(1, 1) <> Hex(0x000000, 6) And _GetPixelColor(850, 1) <> Hex(0x000000, 6) Then ; If the corners aren't black, then COC is not fully zoomed out
+	  SetLog("Zooming Out", $COLOR_BLUE)
+	  While _GetPixelColor(1, 1) <> Hex(0x000000, 6) And _GetPixelColor(850, 1) <> Hex(0x000000, 6) And $i <= 20 ; Zoom out loop that runs up to 20 times if BlueStacks is not fully zoomed out
+		 If _Sleep(600) Then Return ; 600 ms delay between zooming attempts
+		 WinActivate($HWnD) ; Set window focus to BlueStacks
+		 Send("{DOWN}") ; Press the down button to zoom out
+		 $i += 1  ; Increment the zoom out counter
+		 _CaptureRegion(0, 0, 860, 2) ; Capture the top rows of Bluestacks
+	  WEnd
+	  If _GetPixelColor(1, 1) <> Hex(0x000000, 6) And _GetPixelColor(850, 1) <> Hex(0x000000, 6) Then ; If BlueStacks is not fully zoomed out after attempting to do so, make a note in the log
+		 SetLog("Zooming Out Failed", $COLOR_RED)
+	  Else ; If BlueStacks zoomed out successfully after attempting to do so, make a note in the log
+		 SetLog("Zooming Completed Successfully", $COLOR_BLUE)
+	  EndIf
+   EndIf
+EndFunc   ;==>
+
